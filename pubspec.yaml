@@ -1,0 +1,14 @@
+name: solution
+description: >- 
+  Read input CSV file with keywoards and links.
+  Send each keyword to google api.
+  Locate if link is in resultes. Write result position.
+version: 1.0.0
+
+environment:
+  sdk: '>=2.10.0 <3.0.0'
+dependencies: 
+  csv: ^5.0.1
+  dotenv: ^3.0.0
+  googleapis: ^7.0.0
+  googleapis_auth: ^1.3.0
