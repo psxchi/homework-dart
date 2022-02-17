@@ -20,23 +20,25 @@ dart run program input.csv output.""");
   String input = args[0];
   String output = args[1];
 
+  String header = 'keyword,position,link\n';
+  List<List<dynamic>> data = [];
+
   final csvList = await readCSV(input);
 
   var client = auth.clientViaApiKey(env['api']);
   var api = new search.CustomSearchApi(client);
 
-  // ignore csv titles at index 0
-  for (int i = 1; i < 2 /*csvList.length*/; i++) {
+  for (int i = 1; i < csvList.length; i++) {
     final url = csvList[i][3];
     final keywords = csvList[i][1].split(' ');
 
-    for (int kw = 0; kw < 1 /*keywords.length*/; kw++) {
-      // TODO: append to list
-      searchWeb(api, keywords[kw], url);
+    for (int kw = 0; kw < keywords.length; kw++) {
+      final results = await searchWeb(api, keywords[kw], url);
+      if (results != null) data.add(results);
     }
   }
 
-  //writeToCSV(results, output);
+  writeToCSV(header, data, output);
 }
 
 // convert given csv file into a list and return it
@@ -50,28 +52,23 @@ readCSV(String filename) async {
   return fields;
 }
 
-searchWeb(search.CustomSearchApi api, String keyword, String url) {
-  api.cse.list(q: keyword, cx: customSearchId).then((search.Search search) {
+Future<List<dynamic>> searchWeb(
+    search.CustomSearchApi api, String keyword, String url) {
+  return api.cse
+      .list(q: keyword, cx: customSearchId)
+      .then((search.Search search) {
     if (search.items == null) return null;
 
     for (int i = 0; i < search.items.length; i++) {
       if (search.items[i].link == url) return [keyword, i, url];
     }
-  }).catchError((e) => print(e));
+  }).catchError(print);
 }
 
-/*
-writeToCSV(List<String> results, String output) {
-  // open csv
+writeToCSV(String header, List<List<dynamic>> data, String output) {
   final outFile = io.File(output).openWrite();
-
-  // maybe convert list into csv instead?
-  for (String result in results) {
-    // ...
-  }
-
-  // write to csv
-
-  // close csv
+  outFile.write(header);
+  final dataCSV = const ListToCsvConverter().convert(data);
+  outFile.write(dataCSV);
+  outFile.close();
 }
-*/
